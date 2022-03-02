@@ -1,0 +1,8 @@
+{
+  "name": "suchitools",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "clefairy": "^0.2.0"
+  }
+}
