@@ -40,8 +40,14 @@ clefairy.run(
       // ignored
     }
 
-    const callback = runExpression(args[0]);
-    const result = callback(value);
+    const arg = runExpression(args[0]);
+
+    let result;
+    if (typeof arg === "function") {
+      result = arg(value);
+    } else {
+      result = arg;
+    }
 
     if (result != null) {
       let output = result;
