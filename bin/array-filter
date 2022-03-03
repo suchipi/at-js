@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+const loadFunction = require("../lib/load-function");
+
+clefairy.run({}, async (_options, ...args) => {
+  const filterFunctionString = args.join(" ");
+  if (!filterFunctionString) {
+    throw new Error(
+      "Please specify a filter function (JavaScript string) as the first argument to 'array-filter'"
+    );
+  }
+
+  const filterFunction = loadFunction(filterFunctionString);
+
+  const stdinStr = await readStdin();
+  const items = JSON.parse(stdinStr);
+
+  const newItems = items.filter(filterFunction);
+
+  console.log(JSON.stringify(newItems, null, 2));
+});

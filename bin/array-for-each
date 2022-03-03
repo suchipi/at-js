@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+const loadFunction = require("../lib/load-function");
+
+clefairy.run({}, async (_options, ...args) => {
+  const forEachFunctionString = args.join(" ");
+  if (!forEachFunctionString) {
+    throw new Error(
+      "Please specify a function (JavaScript string) as the first argument to 'array-for-each'"
+    );
+  }
+
+  const forEachFunction = loadFunction(forEachFunctionString);
+
+  const stdinStr = await readStdin();
+
+  const items = JSON.parse(stdinStr);
+
+  items.forEach(forEachFunction);
+});

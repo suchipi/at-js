@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+
+clefairy.run({}, async (_options, ...args) => {
+  const stdinStr = await readStdin();
+  const obj = JSON.parse(stdinStr);
+
+  const array = Object.keys(obj);
+
+  console.log(JSON.stringify(array, null, 2));
+});

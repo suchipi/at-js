@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+
+clefairy.run({}, async (_options, ...args) => {
+  let joiner = " ";
+
+  const joinerString = args[0];
+  if (joinerString != null) {
+    try {
+      joiner = new Function("return " + joinerString)();
+    } catch (err) {
+      try {
+        joiner = new Function("return " + '"' + joinerString + '"')();
+      } catch (err) {
+        joiner = new Function("return " + JSON.stringify(joinerString))();
+      }
+    }
+  }
+
+  const stdinStr = await readStdin();
+  const items = JSON.parse(stdinStr);
+
+  console.log(items.join(joiner));
+});

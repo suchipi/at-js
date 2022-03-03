@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+
+clefairy.run({}, async (_options, ...args) => {
+  let delimiter = /[\s]+/g;
+
+  const delimString = args[0];
+  if (delimString != null) {
+    try {
+      delimiter = new Function("return " + delimString)();
+    } catch (err) {
+      try {
+        delimiter = new Function("return " + "/" + delimString + "/g")();
+      } catch (err) {
+        try {
+          delimiter = new Function("return " + '"' + delimString + '"')();
+        } catch (err) {
+          delimiter = new Function("return " + JSON.stringify(delimString))();
+        }
+      }
+    }
+  }
+
+  const stdinStr = await readStdin("string");
+
+  const items = stdinStr.split(delimiter);
+
+  console.log(JSON.stringify(items, null, 2));
+});

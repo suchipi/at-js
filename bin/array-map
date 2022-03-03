@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+const loadFunction = require("../lib/load-function");
+
+clefairy.run({}, async (_options, ...args) => {
+  const mapperFunctionString = args.join(" ");
+  if (!mapperFunctionString) {
+    throw new Error(
+      "Please specify a mapper function (JavaScript string) as the first argument to 'array-map'"
+    );
+  }
+
+  const mapperFunction = loadFunction(mapperFunctionString);
+
+  const stdinStr = await readStdin();
+  const items = JSON.parse(stdinStr);
+
+  const newItems = items.map(mapperFunction);
+
+  console.log(JSON.stringify(newItems, null, 2));
+});

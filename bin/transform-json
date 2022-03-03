@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const readStdin = require("../lib/read-stdin");
+const loadFunction = require("../lib/load-function");
+
+clefairy.run({}, async (_options, ...args) => {
+  const callbackString = args.join(" ");
+  if (!callbackString) {
+    throw new Error(
+      "Please specify a function (JavaScript string) as the first argument to 'transform-json'"
+    );
+  }
+
+  const callback = loadFunction(callbackString);
+
+  const stdinStr = await readStdin();
+  const value = JSON.parse(stdinStr);
+
+  const result = callback(value) || value;
+
+  console.log(JSON.stringify(result, null, 2));
+});
