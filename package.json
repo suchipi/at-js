@@ -1,6 +1,21 @@
 {
   "name": "@suchipi/at-js",
   "description": "unix stdin-pipe-based tools for transforming data with JavaScript",
+  "keywords": [
+    "unix",
+    "stdio",
+    "stdin",
+    "stdout",
+    "pipe",
+    "js",
+    "eval",
+    "shell"
+  ],
+  "author": "Lily Scott <me@suchipi.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/suchipi/at-js.git"
+  },
   "bin": {
     "@": "./bin/@",
     "@call": "./bin/@call",
@@ -14,5 +29,6 @@
     "clefairy": "^0.2.0",
     "make-module-env": "^1.0.1",
     "shelljs": "^0.8.5"
-  }
+  },
+  "license": "MIT"
 }

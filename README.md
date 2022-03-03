@@ -1,6 +1,6 @@
 # `@suchipi/at-js`
 
-Unix command-line utilities for working with data
+> Unix command-line utilities for working with data
 
 This package provides a bunch of binaries starting with `@` that you can use to compose stdio pipes together with JavaScript/JSON.
 
@@ -28,3 +28,7 @@ npm install -g @suchipi/at-js
 - `@join` - join a JSON Array with a delimiter
 - `@map` - map a JSON array into another JSON array, using a function
 - `@split` - split stdin on a delimiter, and print the resulting strings as a JSON array
+
+## License
+
+MIT
