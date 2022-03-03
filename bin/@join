@@ -1,25 +1,46 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
+const parseJson = require("../lib/parse-json");
+const printHelp = require("../lib/print-help");
+const parseArg = require("../lib/parse-arg");
 
-clefairy.run({}, async (_options, ...args) => {
-  let joiner = " ";
+clefairy.run(
+  { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
+  async (options, ...args) => {
+    if (options.help || options.h) {
+      printHelp(
+        "join a JSON Array with a delimiter",
+        `
+          Reads stdin as a JSON array, then calls its .join method, passing in the
+          string you pass as the first argument to @BINARY_NAME@ (or ' ' if unspecified).
+          The resulting string is then written to stdout.
+        `,
+        `
+          echo '["hello", "world"]' | @BINARY_NAME@
+          echo '["hello", "world"]' | @BINARY_NAME@ '\\n'
+        `
+      );
+    }
 
-  const joinerString = args[0];
-  if (joinerString != null) {
-    try {
-      joiner = new Function("return " + joinerString)();
-    } catch (err) {
+    let joiner = " ";
+
+    const joinerString = args[0];
+    if (joinerString != null) {
       try {
-        joiner = new Function("return " + '"' + joinerString + '"')();
+        joiner = new Function("return " + joinerString)();
       } catch (err) {
-        joiner = new Function("return " + JSON.stringify(joinerString))();
+        try {
+          joiner = new Function("return " + '"' + joinerString + '"')();
+        } catch (err) {
+          joiner = new Function("return " + JSON.stringify(joinerString))();
+        }
       }
     }
+
+    const stdinStr = await readStdin();
+    const items = parseJson.array(stdinStr);
+
+    process.stdout.write(items.join(joiner));
   }
-
-  const stdinStr = await readStdin();
-  const items = JSON.parse(stdinStr);
-
-  console.log(items.join(joiner));
-});
+);

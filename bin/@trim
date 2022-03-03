@@ -1,8 +1,0 @@
-#!/usr/bin/env node
-const clefairy = require("clefairy");
-const readStdin = require("../lib/read-stdin");
-
-clefairy.run({}, async (_options, ...args) => {
-  const stdinStr = await readStdin();
-  console.log(stdinStr.trim());
-});

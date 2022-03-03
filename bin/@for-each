@@ -1,21 +1,33 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
-const loadFunction = require("../lib/load-function");
+const runExpression = require("../lib/run-expression");
+const printHelp = require("../lib/print-help");
+const parseJson = require("../lib/parse-json");
 
-clefairy.run({}, async (_options, ...args) => {
-  const forEachFunctionString = args.join(" ");
-  if (!forEachFunctionString) {
-    throw new Error(
-      "Please specify a function (JavaScript string) as the first argument to '@for-each'"
-    );
+clefairy.run(
+  { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
+  async (options, ...args) => {
+    if (options.help || options.h) {
+      printHelp(
+        "evaluate a function once per item in input JSON array",
+        `
+          Reads stdin as a JSON array, then calls its .forEach method, passing in the
+          function you pass as the first argument to @BINARY_NAME@ (as a string).
+
+          This is a shortcut for \`@call forEach\`.
+        `,
+        `
+          echo '[1, [2], [[3, 4], 5]]' | @BINARY_NAME@ 'item => console.log(typeof item)'
+        `
+      );
+    }
+
+    const stdinStr = await readStdin();
+
+    const items = parseJson.array(stdinStr);
+
+    const forEachFunction = runExpression(args[0]);
+    items.forEach(forEachFunction);
   }
-
-  const forEachFunction = loadFunction(forEachFunctionString);
-
-  const stdinStr = await readStdin();
-
-  const items = JSON.parse(stdinStr);
-
-  items.forEach(forEachFunction);
-});
+);

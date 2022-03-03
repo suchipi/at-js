@@ -1,24 +1,55 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
-const loadFunction = require("../lib/load-function");
+const runExpression = require("../lib/run-expression");
+const printHelp = require("../lib/print-help");
 
-clefairy.run({}, async (_options, ...args) => {
-  const callbackString = args.join(" ");
-  if (!callbackString) {
-    throw new Error(
-      "Please specify a function (JavaScript string) as the first argument to '@'"
-    );
+clefairy.run(
+  { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
+  async (options, ...args) => {
+    if (options.help || options.h) {
+      printHelp(
+        "pass stdin through a JavaScript function",
+        `
+          Reads stdin, passes it into a JavaScript function (which you specify as the
+          first argument to @BINARY_NAME@, as a string), and prints the result to stdout.
+
+          If stdin is parseable as JSON, it will be parsed before being passed to
+          your function. Otherwise, a string will be passed to your function.
+
+          If your function returns a string, it will be written to stdout verbatim.
+          Otherwise, the return value will be passed through JSON.stringify before
+          being written to stdout.
+        `,
+        `
+          echo '[ "one", "two" ]' | @BINARY_NAME@ 'array => array.map(item => item.toUpperCase())'
+          echo "hi there" | @BINARY_NAME@ 'str => str.replace(/hi/, "hello")'
+
+          cat myFile.json | @BINARY_NAME@ Object.entries
+          cat myFile.json | @BINARY_NAME@ Object.keys
+        `
+      );
+    }
+
+    const stdinStr = await readStdin();
+
+    let value = stdinStr;
+    try {
+      value = JSON.parse(stdinStr);
+    } catch (err) {
+      // ignored
+    }
+
+    const callback = runExpression(args[0]);
+    const result = callback(value);
+
+    if (result != null) {
+      let output = result;
+      if (typeof result !== "string") {
+        output = JSON.stringify(result, null, 2) + "\n";
+      }
+
+      process.stdout.write(output);
+    }
   }
-
-  const callback = loadFunction(callbackString);
-
-  const stdinStr = await readStdin();
-  const value = JSON.parse(stdinStr);
-
-  const result = callback(value);
-
-  if (result != null) {
-    console.log(JSON.stringify(result, null, 2));
-  }
-});
+);

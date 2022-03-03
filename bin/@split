@@ -1,30 +1,67 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
+const printHelp = require("../lib/print-help");
 
-clefairy.run({}, async (_options, ...args) => {
-  let delimiter = /[\s]+/g;
+clefairy.run(
+  {
+    help: clefairy.optionalBoolean,
+    h: clefairy.optionalBoolean,
+    n: clefairy.optionalBoolean,
+  },
+  async (options, ...args) => {
+    if (options.help || options.h) {
+      printHelp(
+        "split stdin on a delimiter, and print the resulting strings as a JSON array",
+        `
+          Reads stdin as a string, then calls its .split method, passing in the
+          delimiter string/regexp you pass as the first argument to @BINARY_NAME@,
+          or /[\\s]+/g if unspecified.
 
-  const delimString = args[0];
-  if (delimString != null) {
-    try {
-      delimiter = new Function("return " + delimString)();
-    } catch (err) {
+          The return value of .split is then passed through JSON.stringify
+          and printed to stdout.
+
+          If -n is passed, then if the last element of the Array returned from .split is empty,
+          it will be omitted.
+        `,
+        `
+          echo "hello world" | @BINARY_NAME@
+          ls . | @BINARY_NAME@ "\\n"
+          cat ./myTextFile.txt | @BINARY_NAME@ "\\n" -n
+        `
+      );
+    }
+    let delimiter = /[\s]+/g;
+
+    const delimString = args[0];
+    if (delimString != null) {
       try {
-        delimiter = new Function("return " + "/" + delimString + "/g")();
+        // delim string already has single or double quotes around it
+        delimiter = new Function("return " + delimString)();
       } catch (err) {
         try {
-          delimiter = new Function("return " + '"' + delimString + '"')();
+          // delim string is a regexp
+          delimiter = new Function("return " + "/" + delimString + "/g")();
         } catch (err) {
-          delimiter = new Function("return " + JSON.stringify(delimString))();
+          try {
+            // delim string should be interpreted as raw string content (useful for \n)
+            delimiter = new Function("return " + '"' + delimString + '"')();
+          } catch (err) {
+            // delim string should be treated as a (double) quoted JSON string
+            delimiter = new Function("return " + JSON.stringify(delimString))();
+          }
         }
       }
     }
+
+    const stdinStr = await readStdin("string");
+
+    let items = stdinStr.split(delimiter);
+
+    if (options.n && items[items.length - 1] === "") {
+      items.pop();
+    }
+
+    console.log(JSON.stringify(items, null, 2));
   }
-
-  const stdinStr = await readStdin("string");
-
-  const items = stdinStr.split(delimiter);
-
-  console.log(JSON.stringify(items, null, 2));
-});
+);
