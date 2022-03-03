@@ -8,6 +8,7 @@
     "@call": "./bin/@call",
     "@for-each": "./bin/@for-each",
     "@join": "./bin/@join",
+    "@log": "./bin/@log",
     "@map": "./bin/@map",
     "@split": "./bin/@split"
   },

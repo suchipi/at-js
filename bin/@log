@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+const clefairy = require("clefairy");
+const runExpression = require("../lib/run-expression");
+const printHelp = require("../lib/print-help");
+
+clefairy.run(
+  { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
+  async (options, ...args) => {
+    if (options.help || options.h) {
+      printHelp(
+        "run some JavaScript and log the result",
+        `
+          Runs the JavaScript passed as a positional argument to @BINARY_NAME@ and logs the result.
+        `,
+        `
+          @BINARY_NAME@ '2 + 2'
+        `
+      );
+    }
+    const arg = runExpression(args.join(" "));
+    console.log(arg);
+  }
+);

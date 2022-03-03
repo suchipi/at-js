@@ -40,7 +40,7 @@ clefairy.run(
       // ignored
     }
 
-    const arg = runExpression(args[0]);
+    const arg = runExpression(args.join(" "));
 
     let result;
     if (typeof arg === "function") {
