@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
+const kleur = require("kleur");
 const readStdin = require("../lib/read-stdin");
 const printHelp = require("../lib/print-help");
 
@@ -33,24 +34,25 @@ clefairy.run(
     }
     let delimiter = /[\s]+/g;
 
-    const delimString = args[0];
-    if (delimString != null) {
+    let delimString = args[0];
+
+    // There's a bug in clef-parse where empty positional argument strings aren't in args.
+    // This is a workaround, but I'll fix it properly in clef-parse later.
+    // This only matters if they passed "" as a positional argument.
+    if (args.length === 0 && process.argv.some((arg) => arg === "")) {
+      delimString = "";
+    }
+
+    if (delimString === "") {
+      delimiter = "";
+    } else if (delimString != null) {
       try {
-        // delim string already has single or double quotes around it
-        delimiter = new Function("return " + delimString)();
+        delimiter = new Function("return " + "/" + delimString + "/g")();
+        console.error(
+          kleur.dim(`parsed ${JSON.stringify(delimString)} into ${delimiter}`)
+        );
       } catch (err) {
-        try {
-          // delim string is a regexp
-          delimiter = new Function("return " + "/" + delimString + "/g")();
-        } catch (err) {
-          try {
-            // delim string should be interpreted as raw string content (useful for \n)
-            delimiter = new Function("return " + '"' + delimString + '"')();
-          } catch (err) {
-            // delim string should be treated as a (double) quoted JSON string
-            delimiter = new Function("return " + JSON.stringify(delimString))();
-          }
-        }
+        throw new Error("Failed to parse delimiter as regexp: " + err.message);
       }
     }
 
