@@ -16,7 +16,9 @@ clefairy.run({}, async (_options, ...args) => {
   const stdinStr = await readStdin();
   const value = JSON.parse(stdinStr);
 
-  const result = callback(value) || value;
+  const result = callback(value);
 
-  console.log(JSON.stringify(result, null, 2));
+  if (result != null) {
+    console.log(JSON.stringify(result, null, 2));
+  }
 });
