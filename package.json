@@ -5,7 +5,6 @@
   "license": "MIT",
   "bin": {
     "@": "./bin/@",
-    "@call": "./bin/@call",
     "@for-each": "./bin/@for-each",
     "@join": "./bin/@join",
     "@log": "./bin/@log",
@@ -28,6 +27,7 @@
     "url": "https://github.com/suchipi/at-js.git"
   },
   "dependencies": {
+    "@babel/highlight": "^7.16.10",
     "change-case": "^4.1.2",
     "clefairy": "^0.2.0",
     "kleur": "^4.1.4",

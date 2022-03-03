@@ -1,23 +1,59 @@
 #!/usr/bin/env node
+const util = require("util");
 const clefairy = require("clefairy");
 const runExpression = require("../lib/run-expression");
 const printHelp = require("../lib/print-help");
+const readStdin = require("../lib/read-stdin");
 
 clefairy.run(
-  { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
+  {
+    help: clefairy.optionalBoolean,
+    h: clefairy.optionalBoolean,
+    depth: clefairy.optionalNumber,
+    colors: clefairy.optionalBoolean,
+  },
   async (options, ...args) => {
     if (options.help || options.h) {
       printHelp(
         "run some JavaScript and log the result",
         `
-          Runs the JavaScript passed as a positional argument to @BINARY_NAME@ and logs the result.
+          Runs the JavaScript passed as stdin or via a positional argument to @BINARY_NAME@ and logs the result.
+
+          You can pass --colors or --depth to forward them to util.inspect.
         `,
         `
+          echo '2 + 2' | @BINARY_NAME@
           @BINARY_NAME@ '2 + 2'
+
+          @BINARY_NAME@ 'process' --depth 0
+          @BINARY_NAME@ 'process' --depth Infinity --colors false
         `
       );
     }
-    const arg = runExpression(args.join(" "));
-    console.log(arg);
+
+    const jsString = (await readStdin()) || args.join(" ");
+
+    const inspect = (value) =>
+      util.inspect(value, {
+        colors: options.colors == null ? true : options.colors,
+        depth: options.depth == null ? 2 : options.depth,
+      });
+
+    let result = runExpression(jsString);
+    if (typeof result === "function") {
+      const highlight = require("@babel/highlight").default;
+
+      result =
+        inspect(result) +
+        " { " +
+        highlight(result.toString().replace(/\s+/g, " ")) +
+        " } ";
+    }
+
+    if (typeof result !== "string") {
+      console.log(inspect(result));
+    } else {
+      console.log(result);
+    }
   }
 );

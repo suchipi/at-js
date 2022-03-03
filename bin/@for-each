@@ -14,11 +14,12 @@ clefairy.run(
         `
           Reads stdin as a JSON array, then calls its .forEach method, passing in the
           function you pass as the first argument to @BINARY_NAME@ (as a string).
-
-          This is a shortcut for \`@call forEach\`.
         `,
         `
           echo '[1, [2], [[3, 4], 5]]' | @BINARY_NAME@ 'item => console.log(typeof item)'
+
+          # You can use \`exec\` to run a command in a subshell and return its output:
+          echo '["blah.txt", "README.md"]' | @BINARY_NAME@ 'item => exec(\`cp ./a/\${item} ./b/\${item}\`)'
         `
       );
     }

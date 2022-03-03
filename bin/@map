@@ -15,12 +15,15 @@ clefairy.run(
           Reads stdin as a JSON array, then calls its .map method, passing in the
           function you pass as the first argument. The return value of .map is
           then passed through JSON.stringify and printed to stdout.
-
-          This is a shortcut for \`@call map\`.
         `,
         `
           echo '[1, 2, 3]' | @BINARY_NAME@ 'num => num * 2'
           echo '[{name: "Bob"}, {name: "Joe"}]' | @BINARY_NAME@ Object.keys
+
+          echo '["one", "two"]' | @BINARY_NAME@ '.charCodeAt(0)'
+
+          # You can use \`exec\` to run a command in a subshell and return its output:
+          echo '["src", "dist"]' | @BINARY_NAME@ 'item => exec(\`ls \${item}\`.split("\\n"))'
         `
       );
     }

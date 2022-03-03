@@ -9,7 +9,7 @@ clefairy.run(
   async (options, ...args) => {
     if (options.help || options.h) {
       printHelp(
-        "pass stdin through a JavaScript function",
+        "pass stdin through a JavaScript function, or run some JavaScript and log the result",
         `
           Reads stdin, passes it into a JavaScript function (which you specify as the
           first argument to @BINARY_NAME@, as a string), and prints the result to stdout.
@@ -20,13 +20,29 @@ clefairy.run(
           If your function returns a string, it will be written to stdout verbatim.
           Otherwise, the return value will be passed through JSON.stringify before
           being written to stdout.
+
+          If nothing is piped into stdin, the JavaScript string you pass to @BINARY_NAME@ as
+          a positional argument, and its resulting value will be written to stdout.
+          If the resulting value is a string, it will be written to stdout verbatim.
+          Otherwise, the resulting value will be passed through JSON.stringify before
+          being written to stdout.
         `,
         `
+          # Passing in an arrow function:
           echo '[ "one", "two" ]' | @BINARY_NAME@ 'array => array.map(item => item.toUpperCase())'
           echo "hi there" | @BINARY_NAME@ 'str => str.replace(/hi/, "hello")'
 
+          # Passing in a function by name:
           cat myFile.json | @BINARY_NAME@ Object.entries
           cat myFile.json | @BINARY_NAME@ Object.keys
+
+          # Shorthand for property access:
+          echo "[1, 2, 3, null]" | @BINARY_NAME@ '.filter(Boolean)'
+          echo '["one", "two", "three"]' | @BINARY_NAME@ '.slice(1)'
+          echo '["one", "two", "three"]' | @BINARY_NAME@ '.[1]'
+
+          # Running some JavaScript without piping anything into stdin:
+          @BINARY_NAME@ '2 + 2'
         `
       );
     }
@@ -40,7 +56,20 @@ clefairy.run(
       // ignored
     }
 
-    const arg = runExpression(args.join(" "));
+    let arg;
+    try {
+      arg = runExpression(args.join(" "));
+    } catch (err) {
+      try {
+        arg = runExpression(value + args.join(" "));
+      } catch (err2) {
+        try {
+          arg = runExpression(JSON.stringify(value) + args.join(" "));
+        } catch (err3) {
+          throw err;
+        }
+      }
+    }
 
     let result;
     if (typeof arg === "function") {
@@ -49,13 +78,11 @@ clefairy.run(
       result = arg;
     }
 
-    if (result != null) {
-      let output = result;
-      if (typeof result !== "string") {
-        output = JSON.stringify(result, null, 2) + "\n";
-      }
-
-      process.stdout.write(output);
+    let output = result;
+    if (typeof result !== "string") {
+      output = JSON.stringify(result, null, 2) + "\n";
     }
+
+    process.stdout.write(String(output));
   }
 );
