@@ -7,7 +7,7 @@ clefairy.run({}, async (_options, ...args) => {
   const forEachFunctionString = args.join(" ");
   if (!forEachFunctionString) {
     throw new Error(
-      "Please specify a function (JavaScript string) as the first argument to 'array-for-each'"
+      "Please specify a function (JavaScript string) as the first argument to '@for-each'"
     );
   }
 

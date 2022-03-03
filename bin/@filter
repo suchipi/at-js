@@ -4,19 +4,19 @@ const readStdin = require("../lib/read-stdin");
 const loadFunction = require("../lib/load-function");
 
 clefairy.run({}, async (_options, ...args) => {
-  const mapperFunctionString = args.join(" ");
-  if (!mapperFunctionString) {
+  const filterFunctionString = args.join(" ");
+  if (!filterFunctionString) {
     throw new Error(
-      "Please specify a mapper function (JavaScript string) as the first argument to 'array-map'"
+      "Please specify a filter function (JavaScript string) as the first argument to '@filter'"
     );
   }
 
-  const mapperFunction = loadFunction(mapperFunctionString);
+  const filterFunction = loadFunction(filterFunctionString);
 
   const stdinStr = await readStdin();
   const items = JSON.parse(stdinStr);
 
-  const newItems = items.map(mapperFunction);
+  const newItems = items.filter(filterFunction);
 
   console.log(JSON.stringify(newItems, null, 2));
 });

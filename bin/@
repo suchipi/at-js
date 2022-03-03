@@ -7,7 +7,7 @@ clefairy.run({}, async (_options, ...args) => {
   const callbackString = args.join(" ");
   if (!callbackString) {
     throw new Error(
-      "Please specify a function (JavaScript string) as the first argument to 'transform-json'"
+      "Please specify a function (JavaScript string) as the first argument to '@'"
     );
   }
 
