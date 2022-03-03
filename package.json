@@ -1,6 +1,16 @@
 {
   "name": "@suchipi/at-js",
+  "version": "0.1.1",
   "description": "unix stdin-pipe-based tools for transforming data with JavaScript",
+  "license": "MIT",
+  "bin": {
+    "@": "./bin/@",
+    "@call": "./bin/@call",
+    "@for-each": "./bin/@for-each",
+    "@join": "./bin/@join",
+    "@map": "./bin/@map",
+    "@split": "./bin/@split"
+  },
   "keywords": [
     "unix",
     "stdio",
@@ -16,19 +26,9 @@
     "type": "git",
     "url": "https://github.com/suchipi/at-js.git"
   },
-  "bin": {
-    "@": "./bin/@",
-    "@call": "./bin/@call",
-    "@for-each": "./bin/@for-each",
-    "@join": "./bin/@join",
-    "@map": "./bin/@map",
-    "@split": "./bin/@split"
-  },
-  "version": "0.1.0",
   "dependencies": {
     "clefairy": "^0.2.0",
     "make-module-env": "^1.0.1",
     "shelljs": "^0.8.5"
-  },
-  "license": "MIT"
+  }
 }
