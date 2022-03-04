@@ -11,6 +11,8 @@ clefairy.run(
     h: clefairy.optionalBoolean,
     depth: clefairy.optionalNumber,
     colors: clefairy.optionalBoolean,
+    maxArrayLength: clefairy.optionalNumber,
+    maxStringLength: clefairy.optionalNumber,
   },
   async (options, ...args) => {
     if (options.help || options.h) {
@@ -19,7 +21,7 @@ clefairy.run(
         `
           Runs the JavaScript passed as stdin or via a positional argument to @BINARY_NAME@ and logs the result.
 
-          You can pass --colors or --depth to forward them to util.inspect.
+          You can pass --colors, --depth, --max-array-length and/or --max-string-length to forward them to util.inspect.
         `,
         `
           echo '2 + 2' | @BINARY_NAME@
@@ -35,19 +37,23 @@ clefairy.run(
 
     const inspect = (value) =>
       util.inspect(value, {
-        colors: options.colors == null ? true : options.colors,
-        depth: options.depth == null ? 2 : options.depth,
+        colors: options.colors === undefined ? true : options.colors,
+        depth: options.depth === undefined ? 2 : options.depth,
+        maxStringLength:
+          options.maxStringLength === undefined
+            ? 10000
+            : options.maxStringLength,
+        maxArrayLength:
+          options.maxArrayLength === undefined ? 100 : options.maxArrayLength,
+        showHidden: true,
+        showProxy: true,
       });
 
     let result = runExpression(jsString);
     if (typeof result === "function") {
       const highlight = require("@babel/highlight").default;
 
-      result =
-        inspect(result) +
-        " { " +
-        highlight(result.toString().replace(/\s+/g, " ")) +
-        " } ";
+      result = inspect(result) + "\n" + highlight(result.toString());
     }
 
     if (typeof result !== "string") {
