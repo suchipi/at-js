@@ -46,7 +46,11 @@ clefairy.run(
         delimiter = JSON.parse(delimString); // quoted string
       } catch (err) {
         try {
-          delimiter = new Function("return " + "/" + delimString + "/g")();
+          if (/^\//.test(delimString) && /\/\w*$/.test(delimString)) {
+            delimiter = new Function("return " + delimString)();
+          } else {
+            delimiter = new Function("return " + "/" + delimString + "/g")();
+          }
           console.error(
             kleur.dim(
               `parsed ${JSON.stringify(
