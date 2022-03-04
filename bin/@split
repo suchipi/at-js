@@ -4,6 +4,8 @@ const kleur = require("kleur");
 const readStdin = require("../lib/read-stdin");
 const printHelp = require("../lib/print-help");
 
+kleur.enabled = true;
+
 clefairy.run(
   {
     help: clefairy.optionalBoolean,
