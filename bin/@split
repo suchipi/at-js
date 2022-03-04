@@ -36,10 +36,7 @@ clefairy.run(
 
     let delimString = args[0];
 
-    // There's a bug in clef-parse where empty positional argument strings aren't in args.
-    // This is a workaround, but I'll fix it properly in clef-parse later.
-    // This only matters if they passed "" as a positional argument.
-    if (args.length === 0 && process.argv.some((arg) => arg === "")) {
+    if (delimString === "") {
       delimiter = "";
     } else if (delimString != null) {
       try {
