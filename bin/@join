@@ -3,7 +3,6 @@ const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
 const parseJson = require("../lib/parse-json");
 const printHelp = require("../lib/print-help");
-const parseArg = require("../lib/parse-arg");
 
 clefairy.run(
   { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
