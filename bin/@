@@ -1,10 +1,12 @@
 #!/usr/bin/env node
+const util = require("util");
 const clefairy = require("clefairy");
 const kleur = require("kleur");
 const readStdin = require("../lib/read-stdin");
 const runExpression = require("../lib/run-expression");
 const printHelp = require("../lib/print-help");
 const targeting = require("../lib/targeting");
+const json = require("../lib/json");
 
 kleur.enabled = true;
 
@@ -12,35 +14,56 @@ clefairy.run(
   {
     help: clefairy.optionalBoolean,
     h: clefairy.optionalBoolean,
+
     target: clefairy.optionalString,
     t: clefairy.optionalString,
+
+    // Inspect options
+    depth: clefairy.optionalNumber,
+    colors: clefairy.optionalBoolean,
+    maxArrayLength: clefairy.optionalNumber,
+    maxStringLength: clefairy.optionalNumber,
   },
   async (options, ...args) => {
     if (options.help || options.h) {
       printHelp(
         "pass stdin through a JavaScript function, or run some JavaScript and log the result",
         `
-          Reads stdin, passes it into a JavaScript function (which you specify as the
-          first argument to @BINARY_NAME@, as a string), and prints the result to stdout.
+          Reads stdin, passes it into a JavaScript function (which you specify
+          as the first argument to @BINARY_NAME@, as a string), and prints the
+          result to stdout.
 
-          If stdin is parseable as JSON, it will be parsed before being passed to
-          your function. Otherwise, a string will be passed to your function.
+          If stdin is parseable as JSON, it will be parsed before being passed
+          to your function. Otherwise, a string will be passed to your function.
 
-          If your function returns a string, it will be written to stdout verbatim.
-          Otherwise, the return value will be passed through JSON.stringify before
-          being written to stdout.
+          If your function returns a string, it will be written to stdout
+          verbatim. Otherwise, if the return value is can be fully represented
+          as JSON, it will be passed through JSON.stringify, and the resulting
+          string will be printed. Otherwise, the value will be passed through
+          util.inspect, and the resulting string will be printed.
 
-          If nothing is piped into stdin, the JavaScript string you pass to
-          @BINARY_NAME@ as a positional argument will be evaluated, and its resulting
-          value will be written to stdout.
-          If the resulting value is a string, it will be written to stdout verbatim.
-          Otherwise, the resulting value will be passed through JSON.stringify before
-          being written to stdout.
+          When util.inspect is used, if the --depth, --colors,
+          --max-array-length, and/or --max-string-length command-line arguments
+          are present, they will be forwarded into util.inspect's options.
 
           If you pass a target property path with --target or -t, then the
           function you specified will be applied to the object(s) at that path,
-          rather than the root JSON object parsed from stdin. You can use '*'
-          as a wildcard path component in order to target multiple objects.
+          rather than the root JSON object parsed from stdin. Target property
+          paths are the same as you're used to in JavaScript; eg
+          '.some.key[1]', '[2].type', etc. Unlike JavaScript, though, you can
+          use '*' as a wildcard path component in order to target multiple
+          objects. '*' can replace any number or string; eg '.*.key[1]',
+          '[*].type', etc. You can also use '*' multiple times in the same
+          property path.
+
+          When using a target property, the output written to stdout will
+          still be the entire root object. If you want to only print a subset
+          of the root object, you can pipe into @BINARY_NAME@ again with a
+          function that returns a subset of the root object.
+
+          If nothing is piped into stdin, the JavaScript string you pass to
+          @BINARY_NAME@ as a positional argument will be evaluated, and its
+          resulting value will be printed to stdout.
         `,
         `
           # Passing in an arrow function:
@@ -70,62 +93,75 @@ clefairy.run(
       );
     }
 
-    const stdinStr = await readStdin();
+    const stdin = await readStdin();
+    const code = args.join(" ").trim();
 
-    let value = stdinStr;
-    try {
-      value = JSON.parse(stdinStr);
-    } catch (err) {
-      if (stdinStr.length > 0) {
-        console.error(
-          kleur.dim(
-            "Warning: failed to parse stdin as JSON. It will be treated as a raw string."
-          )
-        );
-      }
-    }
+    const result = getResult(stdin, code);
+    printResult(result);
 
-    let arg;
-    if (args.length === 0) {
-      arg = (input) => input;
-    } else {
-      try {
-        arg = runExpression(args.join(" "));
-      } catch (err) {
+    function getResult(stdin, code) {
+      if (stdin == null && code != "") {
+        return runExpression(code);
+      } else if (stdin != null && code != "") {
+        let parsedStdin = stdin;
         try {
-          arg = runExpression(value + args.join(" "));
-        } catch (err2) {
-          try {
-            arg = runExpression(JSON.stringify(value) + args.join(" "));
-          } catch (err3) {
-            throw err;
-          }
+          parsedStdin = JSON.parse(stdin);
+        } catch (err) {
+          console.error(
+            kleur.dim(
+              "Warning: failed to parse stdin as JSON. It will be treated as a raw string."
+            )
+          );
         }
-      }
-    }
 
-    const targetPath = targeting.pathStringToArray(
-      options.target || options.t || ""
-    );
+        const arg = runExpression(code);
+        if (typeof arg !== "function") {
+          const error = new Error(
+            `When '@' is piped into, its positional command-line argument should be a JavaScript expression that evaluates to a function. That's because stdin will be passed into that function. However, your expression resulted in a value of type '${
+              arg === null ? "null" : typeof arg
+            }' instead.`
+          );
+          error.expressionResult = arg;
+          throw error;
+        }
 
-    let result;
-    if (typeof arg === "function") {
-      result = targeting.applyToTarget(value, targetPath, arg);
-    } else {
-      if (targetPath.length > 0) {
+        const targetPath = targeting.pathStringToArray(
+          options.target || options.t || ""
+        );
+
+        return targeting.applyToTarget(parsedStdin, targetPath, arg);
+      } else {
         throw new Error(
-          "The --target option (aka -t) cannot be used with '@' unless its argument is a function."
+          "'@' is not sure what to do; please pass something into stdin and/or call '@' with some command-line arguments. Run '@ --help' for more info."
         );
       }
-
-      result = arg;
     }
 
-    let output = result;
-    if (typeof result !== "string") {
-      output = JSON.stringify(result, null, 2) + "\n";
+    function printResult(result) {
+      if (typeof result === "function") {
+        const highlight = require("@babel/highlight").default;
+
+        result = inspect(result) + "\n" + highlight(result.toString()) + "\n";
+      } else if (typeof result === "string") {
+        process.stdout.write(result);
+      } else if (json.isRepresentableAsJSON(result)) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log(inspect(result));
+      }
     }
 
-    process.stdout.write(String(output));
+    function inspect(value) {
+      return util.inspect(value, {
+        colors: options.colors === undefined ? true : options.colors,
+        depth: options.depth === undefined ? 2 : options.depth,
+        maxStringLength:
+          options.maxStringLength === undefined
+            ? 10000
+            : options.maxStringLength,
+        maxArrayLength:
+          options.maxArrayLength === undefined ? 100 : options.maxArrayLength,
+      });
+    }
   }
 );

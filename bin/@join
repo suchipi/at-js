@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
-const parseJson = require("../lib/parse-json");
 const printHelp = require("../lib/print-help");
+const json = require("../lib/json");
 
 clefairy.run(
   { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
@@ -38,7 +38,7 @@ clefairy.run(
     }
 
     const stdinStr = await readStdin();
-    const items = parseJson.array(stdinStr);
+    const items = json.parseArray(stdinStr);
 
     process.stdout.write(items.join(joiner));
   }

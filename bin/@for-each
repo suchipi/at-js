@@ -3,7 +3,7 @@ const clefairy = require("clefairy");
 const readStdin = require("../lib/read-stdin");
 const runExpression = require("../lib/run-expression");
 const printHelp = require("../lib/print-help");
-const parseJson = require("../lib/parse-json");
+const json = require("../lib/json");
 
 clefairy.run(
   { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
@@ -26,7 +26,7 @@ clefairy.run(
 
     const stdinStr = await readStdin();
 
-    const items = parseJson.array(stdinStr);
+    const items = json.parseArray(stdinStr);
 
     const forEachFunction = runExpression(args[0]);
     items.forEach(forEachFunction);

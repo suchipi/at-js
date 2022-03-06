@@ -36,6 +36,8 @@
     "shelljs": "^0.8.5"
   },
   "devDependencies": {
+    "@babel/core": "^7.17.5",
+    "@babel/eslint-parser": "^7.17.0",
     "eslint": "^8.10.0",
     "eslint-config-unobtrusive": "^1.2.5",
     "eslint-plugin-import": "^2.25.4"
