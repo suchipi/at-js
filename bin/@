@@ -4,16 +4,16 @@ const clefairy = require("clefairy");
 const kleur = require("kleur");
 const readStdin = require("../lib/read-stdin");
 const runExpression = require("../lib/run-expression");
-const printHelp = require("../lib/print-help");
+const { printHelp, printTutorial } = require("../lib/print-help");
 const targeting = require("../lib/targeting");
 const json = require("../lib/json");
-
-kleur.enabled = true;
 
 clefairy.run(
   {
     help: clefairy.optionalBoolean,
     h: clefairy.optionalBoolean,
+
+    tutorial: clefairy.optionalBoolean,
 
     target: clefairy.optionalString,
     t: clefairy.optionalString,
@@ -26,72 +26,16 @@ clefairy.run(
   },
   async (options, ...args) => {
     if (options.help || options.h) {
-      printHelp(
-        "pass stdin through a JavaScript function, or run some JavaScript and log the result",
-        `
-          Reads stdin, passes it into a JavaScript function (which you specify
-          as the first argument to @BINARY_NAME@, as a string), and prints the
-          result to stdout.
-
-          If stdin is parseable as JSON, it will be parsed before being passed
-          to your function. Otherwise, a string will be passed to your function.
-
-          If your function returns a string, it will be written to stdout
-          verbatim. Otherwise, if the return value is can be fully represented
-          as JSON, it will be passed through JSON.stringify, and the resulting
-          string will be printed. Otherwise, the value will be passed through
-          util.inspect, and the resulting string will be printed.
-
-          When util.inspect is used, if the --depth, --colors,
-          --max-array-length, and/or --max-string-length command-line arguments
-          are present, they will be forwarded into util.inspect's options.
-
-          If you pass a target property path with --target or -t, then the
-          function you specified will be applied to the object(s) at that path,
-          rather than the root JSON object parsed from stdin. Target property
-          paths are the same as you're used to in JavaScript; eg
-          '.some.key[1]', '[2].type', etc. Unlike JavaScript, though, you can
-          use '*' as a wildcard path component in order to target multiple
-          objects. '*' can replace any number or string; eg '.*.key[1]',
-          '[*].type', etc. You can also use '*' multiple times in the same
-          property path.
-
-          When using a target property, the output written to stdout will
-          still be the entire root object. If you want to only print a subset
-          of the root object, you can pipe into @BINARY_NAME@ again with a
-          function that returns a subset of the root object.
-
-          If nothing is piped into stdin, the JavaScript string you pass to
-          @BINARY_NAME@ as a positional argument will be evaluated, and its
-          resulting value will be printed to stdout.
-        `,
-        `
-          # Passing in an arrow function:
-          echo '[ "one", "two" ]' | @BINARY_NAME@ 'array => array.map(item => item.toUpperCase())'
-          echo "hi there" | @BINARY_NAME@ 'str => str.replace(/hi/, "hello")'
-
-          # Passing in a function by name:
-          cat myFile.json | @BINARY_NAME@ Object.entries
-          cat myFile.json | @BINARY_NAME@ Object.keys
-
-          # Shorthand for property access:
-          echo "[1, 2, 3, null]" | @BINARY_NAME@ '.filter(Boolean)'
-          echo '["one", "two", "three"]' | @BINARY_NAME@ '.slice(1)'
-          echo '["one", "two", "three"]' | @BINARY_NAME@ '.[1]'
-
-          # Targeting deeper objects in the JSON structure:
-          echo '{ "favorites": [27, 42, 56] }' | @BINARY_NAME@ -t '.favorites' 'favNums => favNums.concat(16)'
-          echo '[ ["a", "b", "c"], [1, 2, 3] ]' | @BINARY_NAME@ -t '[1]' 'numbers => numbers.concat(4)'
-
-          # Using wildcard path components to target multiple items:
-          echo '{ "nums": [1, 2, 3] }' | @BINARY_NAME@ -t '.nums[*]' 'num => num * 2'
-          echo '{ "games": { "splatoon": "fun", "hl2": "fun" } }' | @BINARY_NAME@ -t '.games.*' 'rating => rating.toUpperCase()'
-
-          # Running some JavaScript without piping anything into stdin:
-          @BINARY_NAME@ '2 + 2'
-        `
-      );
+      printHelp();
+      process.exit(0);
     }
+
+    if (options.tutorial) {
+      printTutorial();
+      process.exit(0);
+    }
+
+    kleur.enabled = true;
 
     const stdin = await readStdin();
     const code = args.join(" ").trim();
@@ -125,11 +69,24 @@ clefairy.run(
           throw error;
         }
 
-        const targetPath = targeting.pathStringToArray(
-          options.target || options.t || ""
+        return targeting.applyToTarget(
+          parsedStdin,
+          options.target || options.t || "",
+          arg
         );
+      } else if (stdin != null && code == "") {
+        let parsedStdin = stdin;
+        try {
+          parsedStdin = JSON.parse(stdin);
+        } catch (err) {
+          console.error(
+            kleur.dim(
+              "Warning: failed to parse stdin as JSON. It will be treated as a raw string."
+            )
+          );
+        }
 
-        return targeting.applyToTarget(parsedStdin, targetPath, arg);
+        return parsedStdin;
       } else {
         throw new Error(
           "'@' is not sure what to do; please pass something into stdin and/or call '@' with some command-line arguments. Run '@ --help' for more info."
@@ -141,7 +98,7 @@ clefairy.run(
       if (typeof result === "function") {
         const highlight = require("@babel/highlight").default;
 
-        result = inspect(result) + "\n" + highlight(result.toString()) + "\n";
+        console.log(inspect(result) + "\n" + highlight(result.toString()));
       } else if (typeof result === "string") {
         process.stdout.write(result);
       } else if (json.isRepresentableAsJSON(result)) {
