@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 const clefairy = require("clefairy");
+const kleur = require("kleur");
 const readStdin = require("../lib/read-stdin");
 const runExpression = require("../lib/run-expression");
 const printHelp = require("../lib/print-help");
+const targeting = require("../lib/targeting");
+
+kleur.enabled = true;
 
 clefairy.run(
-  { help: clefairy.optionalBoolean, h: clefairy.optionalBoolean },
+  {
+    help: clefairy.optionalBoolean,
+    h: clefairy.optionalBoolean,
+    target: clefairy.optionalString,
+    t: clefairy.optionalString,
+  },
   async (options, ...args) => {
     if (options.help || options.h) {
       printHelp(
@@ -21,11 +30,17 @@ clefairy.run(
           Otherwise, the return value will be passed through JSON.stringify before
           being written to stdout.
 
-          If nothing is piped into stdin, the JavaScript string you pass to @BINARY_NAME@ as
-          a positional argument, and its resulting value will be written to stdout.
+          If nothing is piped into stdin, the JavaScript string you pass to
+          @BINARY_NAME@ as a positional argument will be evaluated, and its resulting
+          value will be written to stdout.
           If the resulting value is a string, it will be written to stdout verbatim.
           Otherwise, the resulting value will be passed through JSON.stringify before
           being written to stdout.
+
+          If you pass a target property path with --target or -t, then the
+          function you specified will be applied to the object(s) at that path,
+          rather than the root JSON object parsed from stdin. You can use '*'
+          as a wildcard path component in order to target multiple objects.
         `,
         `
           # Passing in an arrow function:
@@ -41,6 +56,14 @@ clefairy.run(
           echo '["one", "two", "three"]' | @BINARY_NAME@ '.slice(1)'
           echo '["one", "two", "three"]' | @BINARY_NAME@ '.[1]'
 
+          # Targeting deeper objects in the JSON structure:
+          echo '{ "favorites": [27, 42, 56] }' | @BINARY_NAME@ -t '.favorites' 'favNums => favNums.concat(16)'
+          echo '[ ["a", "b", "c"], [1, 2, 3] ]' | @BINARY_NAME@ -t '[1]' 'numbers => numbers.concat(4)'
+
+          # Using wildcard path components to target multiple items:
+          echo '{ "nums": [1, 2, 3] }' | @BINARY_NAME@ -t '.nums[*]' 'num => num * 2'
+          echo '{ "games": { "splatoon": "fun", "hl2": "fun" } }' | @BINARY_NAME@ -t '.games.*' 'rating => rating.toUpperCase()'
+
           # Running some JavaScript without piping anything into stdin:
           @BINARY_NAME@ '2 + 2'
         `
@@ -53,28 +76,48 @@ clefairy.run(
     try {
       value = JSON.parse(stdinStr);
     } catch (err) {
-      // ignored
+      if (stdinStr.length > 0) {
+        console.error(
+          kleur.dim(
+            "Warning: failed to parse stdin as JSON. It will be treated as a raw string."
+          )
+        );
+      }
     }
 
     let arg;
-    try {
-      arg = runExpression(args.join(" "));
-    } catch (err) {
+    if (args.length === 0) {
+      arg = (input) => input;
+    } else {
       try {
-        arg = runExpression(value + args.join(" "));
-      } catch (err2) {
+        arg = runExpression(args.join(" "));
+      } catch (err) {
         try {
-          arg = runExpression(JSON.stringify(value) + args.join(" "));
-        } catch (err3) {
-          throw err;
+          arg = runExpression(value + args.join(" "));
+        } catch (err2) {
+          try {
+            arg = runExpression(JSON.stringify(value) + args.join(" "));
+          } catch (err3) {
+            throw err;
+          }
         }
       }
     }
 
+    const targetPath = targeting.pathStringToArray(
+      options.target || options.t || ""
+    );
+
     let result;
     if (typeof arg === "function") {
-      result = arg(value);
+      result = targeting.applyToTarget(value, targetPath, arg);
     } else {
+      if (targetPath.length > 0) {
+        throw new Error(
+          "The --target option (aka -t) cannot be used with '@' unless its argument is a function."
+        );
+      }
+
       result = arg;
     }
 
