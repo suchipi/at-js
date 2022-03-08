@@ -2,6 +2,7 @@
 const util = require("util");
 const clefairy = require("clefairy");
 const kleur = require("kleur");
+const JSON5 = require("json5");
 const readStdin = require("../lib/read-stdin");
 const runExpression = require("../lib/run-expression");
 const { printHelp, printTutorial } = require("../lib/print-help");
@@ -49,7 +50,7 @@ clefairy.run(
       } else if (stdin != null && code != "") {
         let parsedStdin = stdin;
         try {
-          parsedStdin = JSON.parse(stdin);
+          parsedStdin = JSON5.parse(stdin);
         } catch (err) {
           console.error(
             kleur.dim(
@@ -77,7 +78,7 @@ clefairy.run(
       } else if (stdin != null && code == "") {
         let parsedStdin = stdin;
         try {
-          parsedStdin = JSON.parse(stdin);
+          parsedStdin = JSON5.parse(stdin);
         } catch (err) {
           console.error(
             kleur.dim(
