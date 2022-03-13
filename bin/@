@@ -52,11 +52,7 @@ clefairy.run(
         try {
           parsedStdin = JSON5.parse(stdin);
         } catch (err) {
-          console.error(
-            kleur.dim(
-              "Warning: failed to parse stdin as JSON. It will be treated as a raw string."
-            )
-          );
+          // ignored
         }
 
         const arg = runExpression(code);
@@ -80,11 +76,7 @@ clefairy.run(
         try {
           parsedStdin = JSON5.parse(stdin);
         } catch (err) {
-          console.error(
-            kleur.dim(
-              "Warning: failed to parse stdin as JSON. It will be treated as a raw string."
-            )
-          );
+          // ignored
         }
 
         return parsedStdin;
@@ -100,8 +92,8 @@ clefairy.run(
         const highlight = require("@babel/highlight").default;
 
         console.log(inspect(result) + "\n" + highlight(result.toString()));
-      } else if (typeof result === "string") {
-        process.stdout.write(result);
+      } else if (typeof result === "string" || result instanceof String) {
+        process.stdout.write(result.toString());
       } else if (json.isRepresentableAsJSON(result)) {
         console.log(JSON.stringify(result, null, 2));
       } else {

@@ -19,7 +19,7 @@ npm install -g @suchipi/at-js
 ```
 @ - JavaScript stdio transformation tool
 
-From @suchipi/at-js. Made with <3 by Lily Scott (suchipi).
+From @suchipi/at-js@0.3.1. Made with <3 by Lily Scott (suchipi).
 
 Overview
 
@@ -217,8 +217,31 @@ It'll run that command in a subshell, then return its stdout as a string.
 Additionally, if the command exits with a nonzero status code, exec
 will throw an Error with the stdout/stderr/code of the command.
 
-In addition to exec, @ also makes all of the functions
-from the kleur package available as globals:
+You can also call it with multiple strings:
+
+exec("echo", "hi")
+
+And it will join all those strings together with a space between each, then run
+the joined string as a command.
+
+The string returned from exec also has three properties on it:
+
+exec("echo", "hi").stdout // What was written to stdout; string.
+exec("echo", "hi").stderr // What was written to stderr; string.
+exec("echo", "hi").code // The exit status code; number.
+
+
+@ also creates a global alias for JSON.stringify: quote.
+
+quote("hello") // returns '"hello"'
+
+quote can be useful when working with filenames that might
+have a space in them:
+
+file => exec("cp", quote(file), quote(file + ".bak"))
+
+@ also makes all of the functions from the kleur package available as
+globals:
 
 - reset
 - bold
@@ -251,9 +274,7 @@ These functions can be used to style text and change its color:
 
 bold("IMPORTANT")
 
-
 red("FAILURE")
-
 
 bold(green("SUCCESS!"))
 
