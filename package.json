@@ -23,20 +23,19 @@
     "url": "https://github.com/suchipi/at-js.git"
   },
   "dependencies": {
-    "@babel/highlight": "^7.16.10",
+    "@babel/highlight": "^7.24.5",
     "change-case": "^4.1.2",
-    "clefairy": "^0.2.1",
-    "json5": "^2.2.0",
-    "kleur": "^4.1.4",
+    "clefairy": "^2.0.0",
+    "json5": "^2.2.3",
+    "kleur": "^4.1.5",
     "lodash": "^4.17.21",
-    "make-module-env": "^1.0.1",
-    "shelljs": "^0.8.5"
+    "make-module-env": "^1.1.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.5",
-    "@babel/eslint-parser": "^7.17.0",
-    "eslint": "^8.10.0",
+    "@babel/core": "^7.24.5",
+    "@babel/eslint-parser": "^7.24.5",
+    "eslint": "^8.1.2",
     "eslint-config-unobtrusive": "^1.2.5",
-    "eslint-plugin-import": "^2.25.4"
+    "eslint-plugin-import": "^2.29.1"
   }
 }
