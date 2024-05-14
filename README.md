@@ -14,12 +14,12 @@ cat package.json | @ .dependencies | @ Object.keys | @ '.join("\n")'
 npm install -g @suchipi/at-js
 ```
 
-## Full Description
+## Full Description (output of `@ --tutorial`)
 
 ```
 @ - JavaScript stdio transformation tool
 
-From @suchipi/at-js@0.3.1. Made with <3 by Lily Scott (suchipi).
+From @suchipi/at-js@0.5.0. Made with <3 by Lily Skye (suchipi).
 
 Overview
 
@@ -71,7 +71,7 @@ This command line does the following:
 - lists all the files in the current working directory (ls)
 - pipes (|) the output of that command into @
 - instructs @ to transform that input string by using
-  the JavaScript function 'data => data.split("\n")}'.
+  the JavaScript function 'data => data.split("\n")'.
 - prints the result of that function to stdout.
 
 The function receives that input data as a string, and because it uses the
@@ -127,9 +127,8 @@ much as possible.
 
 In order to facilitate that, I added several features to @:
 
-
 1. If your input function string starts with '.', it'll automatically be
-   prefixed with 'input => input'.
+   prefixed with '$it => $it'.
 
 
 Therefore, instead of writing this:
@@ -145,9 +144,8 @@ This can also be used to access nested properties on an object:
 cat package.json | @ '.version'
 
 
-
 2. If your input function string starts with '.[', that '.[' will be replaced
-   with 'input => input['.
+   with '$it => $it['.
 
 
 This is similar to feature #1; it gives you the same conveniences, but for
@@ -156,8 +154,17 @@ number keys and computed property access:
 ls | @ '.split("\n")' | @ '.[0].toUpperCase()'
 
 
+3. If your input function string doesn't start with a property access, but
+   contains $it, it will be prefixed with '$it => '.
 
-3. You can use --target or -t to apply the function to only the value found at a
+
+This provides the benefits of features #1 and #2 to any expression, though it's
+a bit harder to understand at a glance.
+
+ls | @ console.log($it)
+
+
+4. You can use --target or -t to apply the function to only the value found at a
    specific property path, and you can use * as a wildcard.
 
 
@@ -196,8 +203,7 @@ property paths in the data structure:
 @ --target '*.tags.*' 'tag => tag[0].toUpperCase() + tag.slice(1)'
 
 
-
-4. @ makes several helpful globals available to your function.
+5. @ makes several helpful globals available to your function.
 
 
 Node.js has a lot of powerful APIs; for instance, the child_process API
@@ -205,8 +211,8 @@ is super useful for spawning subprocesses and subshells. However, it's not
 really suitable for use in small function strings on the command line. As such,
 @ offers an alternative: the exec function.
 
-exec is a wrapper around shelljs's exec function. It's available as
-a global inside of functions you pass to @.
+exec is a wrapper around Node.js's child_process.spawnSync function. It's
+available as a global inside of functions you pass to @.
 
 If you call it with a string:
 
@@ -278,8 +284,7 @@ red("FAILURE")
 
 bold(green("SUCCESS!"))
 
-
-5. @ will automatically attempt to call require on your behalf if you access an
+6. @ will automatically attempt to call require on your behalf if you access an
    undefined global.
 
 
@@ -304,6 +309,9 @@ The general rule is that you should write your module name using camelCase
 instead of kebab-case. In the case of scoped packages, you should replace
 the @ sign with two underscores, and the slash with one underscore (this is the
 same convention that the @types stuff on npm uses).
+
+
+Hopefully that was informative and helpful! :D
 ```
 
 ## License
