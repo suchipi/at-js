@@ -12,11 +12,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = [ pkgs.nodejs-16_x ];
-
-          shellHook = ''
-            HI='hiii';
-          '';
+          buildInputs = [ pkgs.nodejs-20_x ];
         };
       }
     );
