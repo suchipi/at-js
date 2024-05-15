@@ -4,8 +4,8 @@
   "description": "unix stdin-pipe-based tools for transforming data with JavaScript",
   "license": "MIT",
   "bin": {
-    "@": "./bin/@",
-    "@map": "./bin/@map"
+    "@": "bin/@",
+    "@map": "bin/@map"
   },
   "keywords": [
     "unix",
@@ -20,7 +20,7 @@
   "author": "Lily Skye <me@suchipi.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/suchipi/at-js.git"
+    "url": "git+https://github.com/suchipi/at-js.git"
   },
   "dependencies": {
     "@babel/highlight": "^7.24.5",
