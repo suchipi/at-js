@@ -19,7 +19,7 @@ npm install -g @suchipi/at-js
 ```
 @ - JavaScript stdio transformation tool
 
-From @suchipi/at-js@0.5.0. Made with <3 by Lily Skye (suchipi).
+From @suchipi/at-js@1.6.0. Made with <3 by Lily Skye (suchipi).
 
 Overview
 
