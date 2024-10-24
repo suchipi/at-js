@@ -1,6 +1,6 @@
 {
   "name": "@suchipi/at-js",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "unix stdin-pipe-based tools for transforming data with JavaScript",
   "license": "MIT",
   "bin": {
