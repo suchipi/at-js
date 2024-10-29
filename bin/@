@@ -44,10 +44,16 @@ clefairy.run(
     const result = getResult(stdin, code);
     printResult(result);
 
+    /**
+     * @param {string | null} stdin
+     * @param {string} code
+     * @returns {any} the value to print
+     */
     function getResult(stdin, code) {
       if (stdin == null && code != "") {
         return runExpression(code);
       } else if (stdin != null && code != "") {
+        /** @type {unknown} */
         let parsedStdin = stdin;
         try {
           parsedStdin = JSON5.parse(stdin);
@@ -72,6 +78,7 @@ clefairy.run(
           arg
         );
       } else if (stdin != null && code == "") {
+        /** @type {unknown} */
         let parsedStdin = stdin;
         try {
           parsedStdin = JSON5.parse(stdin);
@@ -87,6 +94,9 @@ clefairy.run(
       }
     }
 
+    /**
+     * @param {unknown} result
+     */
     function printResult(result) {
       if (typeof result === "function") {
         const highlight = require("@babel/highlight").default;
@@ -101,6 +111,10 @@ clefairy.run(
       }
     }
 
+    /**
+     * @param {unknown} value
+     * @returns {string}
+     */
     function inspect(value) {
       return util.inspect(value, {
         colors: options.colors === undefined ? true : options.colors,
